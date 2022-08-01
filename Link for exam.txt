@@ -1,0 +1,68 @@
+ Now try to delete the Pods one by one (first voting Pod, then worker pod, then db pod) and see what happens to the voting and result app after deleting.
+
+
+Ans:Pod is recreated auto and nothing happen on the application and result have been changed and it is not started working.
+And worker pod get restarted.
+
+
+what happens after db pod deletion. 
+
+it is reset and result become and it become 50 and 5
+
+
+in the docker file yaml file we find that application depend on the three parts 
+
+1. Vote
+2. result
+3. Worker
+
+
+We did restart all the pod except result , so after restart of the result pod , it started working fine.
+
+
+
+[root@ip-172-31-17-255 result]# kubectl delete pod -n default       result-5d57b59f4b-vtg9f
+pod "result-5d57b59f4b-vtg9f" deleted
+[root@ip-172-31-17-255 result]# vi docker-compose.test.yml
+version: '2'
+
+services:
+
+  sut:
+    build: ./tests/
+    depends_on:
+      - vote
+      - result
+      - worker
+    networks:
+      - front-tier
+
+  vote:
+    build: ../vote/
+    ports: ["80"]
+    depends_on:
+      - redis
+      - db
+    networks:
+      - front-tier
+      - back-tier
+
+  result:
+    build: .
+    ports: ["80"]
+    depends_on:
+      - redis
+      - db
+    networks:
+      - front-tier
+      - back-tier
+"docker-compose.test.yml" 60L, 787B           
+
+
+[root@ip-172-31-17-255 result]# kubectl get pod -A |grep -i result
+default       result-5d57b59f4b-vtg9f                                                    1/1     Running   0          7m15s
+[root@ip-172-31-17-255 result]# kubectl delete pod -n default       result-5d57b59f4b-vtg9f
+pod "result-5d57b59f4b-vtg9f" deleted
+
+
+
